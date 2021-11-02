@@ -2,20 +2,16 @@
   "natok.web.port": 1000,
   "natok.server": {
     "host": "0.0.0.0",
-    "port": 1002,
+    "port": 1001,
     "cert-pem-path": "web/s-cert.pem",
     "cert-key-path": "web/s-cert.key"
   },
   "datasource": {
-    "host": "playxy.cn",
+    "host": "127.0.0.1",
     "port": 3306,
     "username": "root",
-    "password": "@ai-mysql",
-    "db-prefix": "dev_play",
+    "password": "123456",
+    "db-prefix": "play",
     "table-prefix": ""
-  },
-  "nginx": {
-    "enable": false,
-    "home": "/usr/local/nginx-1.18"
   }
 }
