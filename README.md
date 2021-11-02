@@ -13,8 +13,8 @@ natok-server的相关配置：application.json
   "natok.server": {
     "host": "0.0.0.0",                  // natok-server与服务器地址邦定，不推荐更改
     "port": 1001,                       // natok-cli的通信端口，可自定义。注：需与natok-cli配置文件同步
-    "cert-key-path": "web/s-cert.key",  // TSL加密密钥，可自己指定。注：需与server端保持一致
-    "cert-pem-path": "web/s-cert.pem"   // TSL加密证书，可自己指定。注：需与server端保持一致
+    "cert-key-path": "web/s-cert.key",  // TSL加密密钥，可自己指定。注：需与natok-cli端保持一致
+    "cert-pem-path": "web/s-cert.pem"   // TSL加密证书，可自己指定。注：需与natok-cli端保持一致
   },
   "datasource": {                       // Mysql数据源配置
     "host": "127.0.0.1",                // 自己的数据库地址
