@@ -7,7 +7,7 @@
 
 natok-server的相关配置：application.json
 
-```shell
+```json5
 {
   "natok.web.port": 1000,               // natok·admin管理后台web页面端口，可自定义
   "natok.server": {
