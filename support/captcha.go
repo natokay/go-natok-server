@@ -49,7 +49,7 @@ func PortCheckup(portNumber int) (pid int, err error) {
 	)
 	switch os {
 	case "windows":
-		cmd = exec.Command("cmd", "/c", fmt.Sprintf("netstat -ano -p tcp | findstr %d", portNumber))
+		cmd = exec.Command("cmd", "/c", fmt.Sprintf("netstat -ano | findstr %d", portNumber))
 	case "linux":
 		cmd = exec.Command("bash", "-c", fmt.Sprintf("lsof -i:%d", portNumber))
 	default: // 其他系统
@@ -72,8 +72,8 @@ func PortCheckup(portNumber int) (pid int, err error) {
 	}
 	golog.Info("port: ", portNumber, ", checkup:\r\n", cmdResult)
 	if os == "windows" {
-		var regPort = "\\d+\\.\\d+\\.\\d+\\.\\d:(\\d+)"
-		var regPid = "LISTENING\\s+(\\d+)"
+		const regPort = "[a-zA-z]+\\s+\\d+\\.\\d+\\.\\d+\\.\\d:(\\d+)"
+		const regPid = "(\\d+)$"
 		for _, line := range strings.Split(cmdResult, "\r\n") {
 			if fport := regexp.MustCompile(regPort).FindAllStringSubmatch(line, 1); fport != nil {
 				if fport[0][1] == strconv.Itoa(portNumber) {
@@ -85,7 +85,7 @@ func PortCheckup(portNumber int) (pid int, err error) {
 		}
 	}
 	if os == "linux" {
-		var regPid = ".*?\\s+(\\d+)"
+		const regPid = ".*?\\s+(\\d+)"
 		fpid := regexp.MustCompile(regPid).FindAllStringSubmatch(cmdResult, 1)
 		pid, err = strconv.Atoi(fpid[0][1])
 	}
