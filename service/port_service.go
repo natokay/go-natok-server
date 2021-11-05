@@ -43,8 +43,8 @@ func (s *PortService) ValidatePort(portId int64, value string, level int32) map[
 		if portNum, err := strconv.Atoi(value); err == nil && portNum > 0 && portNum < 65535 {
 			pid, err := support.PortCheckup(portNum)
 			if err != nil || pid != -1 {
-				port := s.Mapper.PortGetById(portId)
-				if port != nil && port.PortNum != portNum {
+				if port := s.Mapper.PortGetById(portId); port != nil {
+					ret["state"] = port.PortNum != portNum
 					return ret
 				}
 			}
