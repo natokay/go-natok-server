@@ -30,11 +30,10 @@ natok-server的相关配置：application.json
 
 **服务端与客户端**
 
-| 服务                     | 下载地址                                               |
-| ------------------------ | ------------------------------------------------------ |
-| natok-cli | [GitHub](https://github.com/natokay/go-natok-cli/releases) |
-| natok-server| [GitHub](https://github.com/natokay/go-natok-server/releases) |
-
+| 服务                     |系统平台| 下载地址                                               |
+| ------------------------|----- | ------------------------------------------------------ |
+| natok-cli |linux/windows| [GitHub](https://github.com/natokay/go-natok-cli/releases) |
+| natok-server| linux/windows|[GitHub](https://github.com/natokay/go-natok-server/releases) |
 
 
 **Go 1.13 及以上（推荐）**
