@@ -40,7 +40,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 
 ```shell
 # 克隆项目
-git clone https://github.com/play-sy/go-natok-server.git
+git clone https://github.com/natokay/go-natok-server.git
 
 # 进入项目目录
 cd go-natok-server
