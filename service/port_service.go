@@ -2,11 +2,11 @@ package service
 
 import (
 	"errors"
-	"go-natok-server/core"
-	"go-natok-server/dsmapper"
-	"go-natok-server/model"
-	"go-natok-server/support"
-	"go-natok-server/util"
+	"natok-server/core"
+	"natok-server/dsmapper"
+	"natok-server/model"
+	"natok-server/support"
+	"natok-server/util"
 	"strconv"
 	"time"
 )
@@ -41,12 +41,14 @@ func (s *PortService) ValidatePort(portId int64, value string, level int32) map[
 	ret["state"] = true
 	if level == 1 { //端口号验证
 		if portNum, err := strconv.Atoi(value); err == nil && portNum > 0 && portNum < 65535 {
-			if pid, err := support.PortCheckup(portNum); err != nil || pid != -1 {
-				if port := s.Mapper.PortGetById(portId); port != nil && port.PortNum != portNum {
+			pid, err := support.PortCheckup(portNum)
+			if err != nil || pid != -1 {
+				if port := s.Mapper.PortGetById(portId); port != nil {
+					ret["state"] = port.PortNum != portNum
 					return ret
 				}
 			}
-			ret["state"] = s.Mapper.PortExist(portId, value)
+			ret["state"] = pid != -1 || s.Mapper.PortExist(portId, value)
 		}
 	}
 	if level == 2 { //域名验证

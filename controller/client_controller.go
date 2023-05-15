@@ -4,8 +4,8 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"github.com/kataras/iris/v12/sessions"
-	"go-natok-server/model/vo"
-	"go-natok-server/service"
+	"natok-server/model/vo"
+	"natok-server/service"
 )
 
 // ClientController struct 客户端 - 控制层

@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/kataras/golog"
-	"go-natok-server/util"
+	"natok-server/util"
 	"net"
 	"strconv"
 	"time"
@@ -56,7 +56,7 @@ func (e *ExtraServerHandler) Receive(handler *ConnectHandler, data interface{}) 
 			case natokHandler := <-extraHandler.Chan:
 				handler.ConnHandler = natokHandler
 			case <-time.After(time.Second * 15):
-				golog.Info("Port ", e.Port, " wait 15 second, connection timeout !")
+				golog.Infof("Port %d wait 15 second, connection timeout !", e.Port)
 				e.Error(handler)
 				return
 			}

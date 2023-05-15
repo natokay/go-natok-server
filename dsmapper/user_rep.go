@@ -2,7 +2,7 @@ package dsmapper
 
 import (
 	"github.com/kataras/golog"
-	"go-natok-server/model"
+	"natok-server/model"
 )
 
 // GetUser 获取用户信息

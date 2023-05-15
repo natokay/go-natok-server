@@ -7,10 +7,10 @@ import (
 	"github.com/kataras/iris/v12/mvc"
 	"github.com/kataras/iris/v12/sessions"
 	"github.com/mojocn/base64Captcha"
-	"go-natok-server/dsmapper"
-	"go-natok-server/model"
-	"go-natok-server/model/vo"
-	"go-natok-server/support"
+	"natok-server/dsmapper"
+	"natok-server/model"
+	"natok-server/model/vo"
+	"natok-server/support"
 	"strings"
 )
 

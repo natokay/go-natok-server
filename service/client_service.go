@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"github.com/satori/go.uuid"
-	"go-natok-server/core"
-	"go-natok-server/dsmapper"
-	"go-natok-server/model"
-	"go-natok-server/util"
+	"natok-server/core"
+	"natok-server/dsmapper"
+	"natok-server/model"
+	"natok-server/util"
 	"strings"
 	"time"
 )
@@ -161,7 +161,7 @@ func (s *ClientService) ValidateClient(id int64, name string, level int32) map[s
 	return ret
 }
 
-//SwitchClientBlocking 启停C端
+// SwitchClientBlocking 启停C端
 // opt=1 启用 opt=2 停用 opt=3 停用&&删除
 func SwitchClientBlocking(accessKey string, opt int) (err error) {
 	switch opt {

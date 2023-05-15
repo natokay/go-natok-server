@@ -6,10 +6,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"github.com/kataras/golog"
-	"go-natok-server/core"
-	"go-natok-server/model"
-	"go-natok-server/support"
-	"go-natok-server/util"
+	"natok-server/core"
+	"natok-server/model"
+	"natok-server/support"
+	"natok-server/util"
 	"time"
 	xormc "xorm.io/core"
 )
@@ -19,7 +19,7 @@ var Engine *xorm.Engine
 
 // 创建orm引擎
 func init() {
-	db := support.Conf.Db
+	db := support.AppConf.Natok.Db
 	dbname := db.DbPrefix + "_natok"
 	// 拼装数据库连接地址
 	dbUrl := fmt.Sprintf("%s:%s@tcp(%s:%d)/", db.Username, db.Password, db.Host, db.Port)

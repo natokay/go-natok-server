@@ -1,8 +1,8 @@
 package service
 
 import (
-	"go-natok-server/core"
-	"go-natok-server/dsmapper"
+	"natok-server/core"
+	"natok-server/dsmapper"
 	"sync/atomic"
 )
 

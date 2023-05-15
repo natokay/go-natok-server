@@ -4,9 +4,9 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"github.com/kataras/iris/v12/sessions"
-	"go-natok-server/model"
-	"go-natok-server/model/vo"
-	"go-natok-server/service"
+	"natok-server/model"
+	"natok-server/model/vo"
+	"natok-server/service"
 )
 
 // PortController struct 端口 - 控制层

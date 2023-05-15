@@ -4,7 +4,7 @@ import (
 	"github.com/go-xorm/xorm"
 	"github.com/jmoiron/sqlx"
 	"github.com/kataras/golog"
-	"go-natok-server/model"
+	"natok-server/model"
 	"strconv"
 )
 
@@ -41,7 +41,7 @@ func ClientUpApply(ids ...int64) {
 	}
 }
 
-////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
 // ClientQueryByNameOrKey 查询C端根据 kw
 func (d *DsMapper) ClientQueryByNameOrKey(kw string) *model.NatokClient {
 	var session *xorm.Session

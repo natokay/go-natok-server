@@ -2,8 +2,8 @@ package timer
 
 import (
 	"github.com/kataras/golog"
-	"go-natok-server/core"
-	"go-natok-server/dsmapper"
+	"natok-server/core"
+	"natok-server/dsmapper"
 	"time"
 )
 

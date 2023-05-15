@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/kataras/golog"
-	"go-natok-server/model"
+	"natok-server/model"
 	"strconv"
 	"strings"
 	"time"

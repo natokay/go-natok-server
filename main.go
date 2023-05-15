@@ -3,33 +3,120 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	win "github.com/kardianos/service"
 	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/logger"
 	"github.com/kataras/iris/v12/middleware/recover"
 	"github.com/kataras/iris/v12/mvc"
-	"go-natok-server/controller"
-	"go-natok-server/core"
-	"go-natok-server/service"
-	"go-natok-server/support"
-	"go-natok-server/timer"
-	"io/ioutil"
+	"natok-server/controller"
+	"natok-server/core"
+	"natok-server/service"
+	"natok-server/support"
+	"natok-server/timer"
 	"net"
+	"os"
 	"strconv"
 )
 
+type Program struct{}
+
+func (p *Program) Start(s win.Service) error {
+	go p.run()
+	return nil
+}
+
+func (p *Program) run() {
+	golog.Info("Started natok server service")
+	Start()
+	StartWeb()
+}
+
+func (p *Program) Stop(s win.Service) error {
+	golog.Info("Stop natok server service")
+	return nil
+}
+
+func init() {
+	// 日志记录处理
+	golog.SetLevel("debug")
+	logFilePath := support.AppConf.Natok.Server.LogFilePath
+	if logFilePath != "" {
+		logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			golog.Error(err)
+		} else {
+			golog.AddOutput(logFile)
+		}
+	}
+}
+
 // 程序入口
 func main() {
+	svcConfig := &win.Config{
+		Name:        "natok-server",
+		DisplayName: "Natok Server Service",
+		Description: "Go语言实现的内网代理服务端服务",
+	}
 
-	Start()
+	prg := &Program{}
+	s, err := win.New(prg, svcConfig)
+	if err != nil {
+		golog.Fatal(err)
+	}
 
-	StartWeb()
+	if len(os.Args) > 1 {
+		if os.Args[1] == "install" {
+			if se := s.Install(); se != nil {
+				golog.Error("Service installation failed. ", se)
+			} else {
+				golog.Info("Service installed")
+			}
+			return
+		}
+		if os.Args[1] == "uninstall" {
+			if se := s.Uninstall(); se != nil {
+				golog.Error("Service uninstall failed. ", se)
+			} else {
+				golog.Info("Service uninstalled")
+			}
+			return
+		}
+		if os.Args[1] == "start" {
+			if se := s.Start(); se != nil {
+				golog.Error("Service start failed. ", se)
+			} else {
+				golog.Info("Service startup completed")
+			}
+			return
+		}
+		if os.Args[1] == "restart" {
+			if se := s.Restart(); se != nil {
+				golog.Error("Service restart failed. ", se)
+			} else {
+				golog.Info("Service restart completed")
+			}
+			return
+		}
+		if os.Args[1] == "stop" {
+			if se := s.Stop(); se != nil {
+				golog.Error("Service stop failed. ", se)
+			} else {
+				golog.Info("Service stop completed")
+			}
+			return
+		}
+	}
+
+	if err = s.Run(); err != nil {
+		golog.Fatal(err)
+	}
 }
 
 // Start 启动主服务
 func Start() {
 	var (
-		appConf  = support.Conf.Server
+		appConf  = support.AppConf.Natok.Server
 		addr     = appConf.InetHost + ":" + strconv.Itoa(appConf.InetPort)
 		listener net.Listener
 		err      error
@@ -43,7 +130,7 @@ func Start() {
 		if err != nil {
 			golog.Fatal(err)
 		}
-		certBytes, err := ioutil.ReadFile(appConf.CertPemPath)
+		certBytes, err := os.ReadFile(appConf.CertPemPath)
 		if err != nil {
 			panic("Unable to read cert.pem")
 		}
@@ -96,9 +183,11 @@ func StartWeb() {
 	app.Use(support.CorsHandler())
 	app.Use(support.AuthorHandler())
 
-	app.Favicon("./web/static/favicon.ico")
-	app.HandleDir("/static", "./web/static")
-	app.RegisterView(iris.HTML("./web/view", ".html"))
+	baseDirPath := support.AppConf.BaseDirPath
+
+	app.Favicon(baseDirPath + "./web/static/favicon.ico")
+	app.HandleDir("/static", baseDirPath+"./web/static")
+	app.RegisterView(iris.HTML(baseDirPath+"./web/view", ".html"))
 
 	// 跨域访问配置
 	visitApp := app.Party("/").AllowMethods(iris.MethodOptions)
@@ -117,5 +206,5 @@ func StartWeb() {
 		ctx.View("index.html")
 	})
 	// 启动服务，端口监听
-	app.Run(iris.Addr(":"+strconv.Itoa(support.Conf.WebPort)), iris.WithCharset("UTF-8"))
+	app.Run(iris.Addr(":"+strconv.Itoa(support.AppConf.Natok.WebPort)), iris.WithCharset("UTF-8"))
 }

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"go-natok-server/util"
+	"natok-server/util"
 	"time"
 )
 
