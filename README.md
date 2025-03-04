@@ -21,7 +21,6 @@
 natok:
   web.port: 1000 #natok·admin管理后台web页面
   server:
-    host: 0.0.0.0 #可改为127.0.0.1与nginx等转域名访问
     port: 1001    #natok-cli的通信；若更换需与natok-cli的端口保持一致
     cert-pem-path: web/s-cert.pem #TSL加密密钥；若更换需与natok-cli保持一致
     cert-key-path: web/s-cert.key #TSL加密证书；若更换需与natok-cli保持一致
@@ -37,7 +36,6 @@ natok:
 natok:
   web.port: 1000 #natok·admin管理后台web页面
   server:
-    host: 0.0.0.0 #可改为127.0.0.1与nginx等转域名访问
     port: 1001    #natok-cli的通信；若更换需与natok-cli的端口保持一致
     cert-pem-path: web/s-cert.pem #TSL加密密钥；若更换需与natok-cli保持一致
     cert-key-path: web/s-cert.key #TSL加密证书；若更换需与natok-cli保持一致
