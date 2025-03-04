@@ -133,3 +133,24 @@ natok-server与natok-client内部通讯采用连接池，即从公网访问natok
 
 **natok:1.6.1**
 natok-server的访问端口监听，可选择监听范围：global=全局,local=本地。
+
+
+## NATOK平台界面预览
+
+登录页面
+![image-20250303220714-r1kbi0b](https://github.com/user-attachments/assets/49e963e1-0062-4e2b-89d2-8309472e9fe7)
+
+统计概览
+![image-20250303220743-etmceyf](https://github.com/user-attachments/assets/cba87be9-e6d0-4ab2-8fbe-222397c4a06a)
+
+代理管理
+![image-20250303220953-vz1hjpb](https://github.com/user-attachments/assets/bc42a243-c1fc-4fa3-adfd-23c6175f9166)
+![image-20250303221323-a0q00lk](https://github.com/user-attachments/assets/ff38b0a3-d578-4342-a68c-98e4775c5021)
+
+端口映射
+![image-20250303221053-j7b3tsy](https://github.com/user-attachments/assets/4f65aea5-5f97-42dc-94a0-0e3af73d4bef)
+![image-20250303221456-pkfl4wt](https://github.com/user-attachments/assets/3692fce0-6104-47ee-b2b5-fcafd78366ec)
+
+标签名单
+![image-20250303221123-zl9f76j](https://github.com/user-attachments/assets/02262934-f260-43da-8435-45fdd35c1793)
+![image-20250303221545-9n2vwqs](https://github.com/user-attachments/assets/14ddd49a-fdcc-49d0-ae8e-071a9962ac4c)
