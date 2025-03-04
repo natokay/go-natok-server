@@ -25,43 +25,51 @@ func (c *PortController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("DELETE", "/port/del", "PortDelete")
 }
 
-// PortList 获取端口列表
+// PortList 列表分页
 func (c *PortController) PortList() mvc.Result {
 	wd := c.Ctx.URLParam("wd")
-	sort := c.Ctx.URLParam("sort")
 	page := c.Ctx.URLParamIntDefault("page", 1)
 	limit := c.Ctx.URLParamIntDefault("limit", 10)
-	ret := c.Service.QueryPort(wd, sort, page, limit)
+	ret := c.Service.QueryPort(wd, page, limit)
 	return vo.TipResult(ret)
 }
 
-// PortValidate 端口校验
-func (c *PortController) PortValidate() mvc.Result {
-	portId := c.Ctx.URLParamInt64Default("portId", 0)
-	value := c.Ctx.URLParam("value")
-	level := c.Ctx.URLParamInt32Default("type", 0)
-	ret := c.Service.ValidatePort(portId, value, level)
-	return vo.TipResult(ret)
-}
-
-// PortGet 获取端口信息
+// PortGet 详情
 func (c *PortController) PortGet() mvc.Result {
 	portId := c.Ctx.URLParamInt64Default("portId", 0)
-	ret := c.Service.GetPort(portId)
-	return vo.TipResult(ret)
+	if ret, err := c.Service.GetPort(portId); err == nil {
+		return vo.TipResult(ret)
+	} else {
+		return vo.TipMsg(err)
+	}
 }
 
-// PortSave 保存单个C端信息
+// PortSave 保存
 func (c *PortController) PortSave() mvc.Result {
 	item := new(model.NatokPort)
-	err := c.Ctx.ReadForm(item)
-	if err == nil {
-		err = c.Service.SavePort(item)
+	if err := c.Ctx.ReadJSON(item); err != nil {
+		return vo.TipMsg(err)
 	}
+	if item.AccessKey == "" || item.Intranet == "" || item.PortNum == 0 {
+		return vo.TipErrorMsg("parameter error")
+	}
+	err := c.Service.SavePort(item)
 	return vo.TipMsg(err)
 }
 
-// PortSwitch 启用与停用切换
+// PortDelete 删除
+func (c *PortController) PortDelete() mvc.Result {
+	portId := c.Ctx.URLParamInt64Default("portId", 0)
+	accessKey := c.Ctx.URLParam("accessKey")
+	//非正常情况，返回错误消息
+	if portId <= 0 || accessKey == "" {
+		return vo.TipErrorMsg("parameter error")
+	}
+	err := c.Service.DeletePort(portId, accessKey)
+	return vo.TipMsg(err)
+}
+
+// PortSwitch 启用或停用
 func (c *PortController) PortSwitch() mvc.Result {
 	portId := c.Ctx.URLParamInt64Default("portId", 0)
 	enabled := c.Ctx.URLParamIntDefault("enabled", 0)
@@ -74,14 +82,11 @@ func (c *PortController) PortSwitch() mvc.Result {
 	return vo.TipMsg(err)
 }
 
-// PortDelete 删除端口映射
-func (c *PortController) PortDelete() mvc.Result {
+// PortValidate 校验
+func (c *PortController) PortValidate() mvc.Result {
 	portId := c.Ctx.URLParamInt64Default("portId", 0)
-	accessKey := c.Ctx.URLParam("accessKey")
-	//非正常情况，返回错误消息
-	if portId <= 0 || accessKey == "" {
-		return vo.TipErrorMsg("parameter error")
-	}
-	err := c.Service.DeletePort(portId, accessKey)
-	return vo.TipMsg(err)
+	portNum := c.Ctx.URLParamIntDefault("portNum", 0)
+	protocol := c.Ctx.URLParamDefault("protocol", "tcp")
+	ret := c.Service.ValidatePort(portId, portNum, protocol)
+	return vo.TipResult(ret)
 }

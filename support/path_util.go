@@ -1,15 +1,15 @@
 package support
 
 import (
-	"github.com/kataras/golog"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
 
-// 最终方案-全兼容
-func getCurrentAbPath() string {
+// GetCurrentAbPath 最终方案-全兼容
+func GetCurrentAbPath() string {
 	dir := getCurrentAbPathByExecutable()
 	if strings.Contains(dir, getTmpDir()) {
 		dir = getCurrentAbPathByCaller()
@@ -31,7 +31,7 @@ func getTmpDir() string {
 func getCurrentAbPathByExecutable() string {
 	exePath, err := os.Executable()
 	if err != nil {
-		golog.Fatal(err)
+		logrus.Fatal(err)
 	}
 	res, _ := filepath.EvalSymlinks(filepath.Dir(exePath))
 	return res

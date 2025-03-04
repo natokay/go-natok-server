@@ -1,39 +1,54 @@
-# NATOK
+# NATOK · ![GitHub Repo stars](https://img.shields.io/github/stars/natokay/go-natok-server) ![GitHub Repo stars](https://img.shields.io/github/stars/natokay/go-natok-cli)
 
-- natok是一个将局域网内个人服务代理到公网可访问的内网穿透工具，基于tcp协议、支持udp协议，支持任何tcp上层协议（列如：http、https、ssh、telnet、data base、remote desktop....）。
-- 目前市面上提供类似服务的有：花生壳、natapp、ngrok等等。当然，这些工具都很优秀！但是免费提供的服务都很有限，想要有比较好的体验都需要支付一定的套餐费用，由于数据包会流经第三方，因此总归有些不太友好。
-- natok-server与natok-cli都基于GO语言开发，几乎不存在并发问题。运行时的内存开销也很低，一般在几十M左右。所以很推荐自主搭建服务！
+<div align="center">
+  <!-- Snake Code Contribution Map 贪吃蛇代码贡献图 -->
+  <img src="grid-snake.svg" />
+</div>
+<p/>
 
 
-**服务端与客户端**
-
-| 服务                     |支持系统| 下载地址                                               |
-| ------------------------|----- | ------------------------------------------------------ |
-| natok-cli |linux/windows| [GitHub](https://github.com/natokay/go-natok-cli/releases) |
-| natok-server| linux/windows|[GitHub](https://github.com/natokay/go-natok-server/releases) |
-
+- 🌱 natok是一个将局域网内个人服务代理到公网可访问的内网穿透工具。基于tcp协议、支持udp协议, 支持任何tcp上层协议（列如: http、https、ssh、telnet、data base、remote desktop....）。
+- 🤔 目前市面上提供类似服务的有: 花生壳、natapp、ngrok等等。当然, 这些工具都很优秀; 但是免费提供的服务都很有限, 想要有比较好的体验都需要支付一定的套餐费用, 由于数据包会流经第三方, 因此总归有些不太友好。
+- ⚡ natok-server与natok-cli都基于GO语言开发, 先天并发支持; 运行时的内存开销也很低, 一般在二十M左右。
 
 
 运行natok-server相关的准备
-- 公网ip的服务器主机，配置无特殊要求，当然带宽高点也好
-- 服务器主机可访问的mysql数据库，现在的docker已经很方便了
+- 公网ip的服务器主机，配置无特殊要求，当然带宽高点也好。
+- 数据库：推荐sqlite，便捷无需任何配置；支持mysql，便于数据维护。
 
-**natok-server的相关配置：conf.yaml**
+**一、natok-server使用sqlite：conf.yaml**
 ```yaml
 natok:
-  web.port: 1000 #natok·admin管理后台web页面端口，可自定义
+  web.port: 1000 #natok·admin管理后台web页面
   server:
-    host: 0.0.0.0 #natok-server与服务器地址邦定，不推荐更改
-    port: 1001    #natok-cli的通信端口，可自定义。注：需与natok-cli配置文件同步
-    cert-pem-path: web/s-cert.pem #TSL加密密钥，可自己指定。注：需与natok-cli端保持一致
-    cert-key-path: web/s-cert.key #TSL加密证书，可自己指定。注：需与natok-cli端保持一致
-    log-file-path: web/out.log    #程序日志输出配置
-  datasource: #Mysql数据源配置
+    host: 0.0.0.0 #natok-server与服务器地址邦定
+    port: 1001    #natok-cli的通信；若更换需与natok-cli的端口保持一致
+    cert-pem-path: web/s-cert.pem #TSL加密密钥；若更换需与natok-cli保持一致
+    cert-key-path: web/s-cert.key #TSL加密证书；若更换需与natok-cli保持一致
+    log-file-path: web/out.log    #程序日志输出文件
+  datasource:
+    type: sqlite
+    db-suffix: beta    #库后缀，可指定
+    table-prefix: ""   #表前缀，可指定
+```
+
+**二、natok-server使用mysql：conf.yaml**
+```yaml
+natok:
+  web.port: 1000 #natok·admin管理后台web页面
+  server:
+    host: 0.0.0.0 #natok-server与服务器地址邦定
+    port: 1001    #natok-cli的通信；若更换需与natok-cli的端口保持一致
+    cert-pem-path: web/s-cert.pem #TSL加密密钥；若更换需与natok-cli保持一致
+    cert-key-path: web/s-cert.key #TSL加密证书；若更换需与natok-cli保持一致
+    log-file-path: web/out.log    #程序日志输出文件
+  datasource:
+    type: mysql
     host: 127.0.0.1    #自己的数据库地址
     port: 3306         #自己的数据库端口
-    username: natok    #数据库用户名
+    username: natok    #数据库账号
     password: "123456" #数据库密码
-    db-prefix: playxy  #数据库前缀，可指定
+    db-suffix: beta    #库后缀，可指定
     table-prefix: ""   #表前缀，可指定
 ```
 
@@ -56,14 +71,16 @@ chmod 755 natok-server
 nohup ./natok-server > /dev/null 2>&1 &
 ```
 
-**Go 1.13 及以上（推荐）**
+---
+
+### natok-server开发环境搭建
+
+**Go 1.22.0 及以上（推荐）**
 ```shell
 # 配置 GOPROXY 环境变量
 go env -w GO111MODULE=on
 go env -w GOPROXY=https://goproxy.cn,direct
 ```
-
-构建natok-server可执行程序
 
 ```shell
 # 克隆项目
@@ -83,6 +100,8 @@ go env -w GOARCH=amd64
 go env -w GOOS=windows
 
 # golang windows 程序获取管理员权限(UAC)
+# go install github.com/akavel/rsrc@latest
+# go env GOPATH 将里路径bin的目录配置到环境变量
 rsrc -manifest nac.manifest -o nac.syso
 
 # cd到main.go目录，打包命令
@@ -107,3 +126,12 @@ natok-cli与natok-server可支持udp网络代理。
 
 **natok:1.4.0**
 natok-server端口访问支持白名单限制，重要端口(如：linux-22,windows-3389)可限制访问的ip地址。
+
+**natok:1.5.0**
+natok-server数据库类型支持sqlite、mysql，推荐使用sqlite，部署更便捷。
+
+**natok:1.6.0**
+natok-server与natok-client内部通讯采用连接池，即从公网访问natok-server后，会将连接放入连接池中，以便后续的请求时能更快的响应。
+
+**natok:1.6.1**
+natok-server的访问端口监听，可选择监听范围：global=全局,local=本地。

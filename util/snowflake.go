@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -33,16 +34,35 @@ type IdWorker struct {
 	lastTimestamp int64
 }
 
-// DefaultSnowflakeId 默认获取雪花ID
-func DefaultSnowflakeId() (error, int64) {
+// DefSnowflakeId 默认获取雪花ID
+func DefSnowflakeId() (error, int64) {
+	return SnowflakeId(0, 0)
+}
+
+// DefStrSnowflakeId 默认获取雪花ID
+func DefStrSnowflakeId() (error, string) {
+	return StrSnowflakeId(0, 0)
+}
+
+// SnowflakeId 获取雪花ID
+func SnowflakeId(workerId, dataCenterId int64) (error, int64) {
 	var err error
 	if nil == snowflakeWorker {
-		err, snowflakeWorker = NewIdWorker(0, 0, epoch())
+		err, snowflakeWorker = NewIdWorker(workerId, dataCenterId, epoch())
 	}
 	if err == nil {
 		return snowflakeWorker.NextId()
 	}
 	return err, 0
+}
+
+// StrSnowflakeId 获取雪花ID
+func StrSnowflakeId(workerId, dataCenterId int64) (error, string) {
+	if err, id := SnowflakeId(workerId, dataCenterId); err == nil {
+		return nil, strconv.FormatInt(id, 10)
+	} else {
+		return err, ""
+	}
 }
 
 // NewIdWorker new worker

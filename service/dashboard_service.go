@@ -50,13 +50,14 @@ func (s *ReportService) ClientState() map[string]interface{} {
 func (s *ReportService) PortState() map[string]interface{} {
 	ret := make(map[string]interface{}, 0)
 	actCount := int64(0)
-	core.ClientGroupManage.Range(func(key, value interface{}) bool {
-		count := len(value.(*core.ClientBlocking).Mapping)
+	core.ClientManage.Range(func(_, cm any) bool {
+		client := cm.(*core.ClientBlocking)
+		count := core.GetLen(&client.PortListener)
 		atomic.AddInt64(&actCount, int64(count))
 		return true
 	})
 	ret["活跃"] = actCount
-	ret["未活动"] = s.Mapper.PortCountTotal() - actCount
+	ret["未活动"] = s.Mapper.PortCountTotal("") - actCount
 	ret["未过期"] = s.Mapper.PortExpiredCount(false)
 	ret["已过期"] = s.Mapper.PortExpiredCount(true)
 	return ret
@@ -91,18 +92,24 @@ func (s *ReportService) ProtocolState() map[string]interface{} {
 
 // RunningState 统计运行状态
 func (s *ReportService) RunningState() []interface{} {
-	ret := make([]interface{}, 0)
-	core.ClientGroupManage.Range(func(key, value interface{}) bool {
-		blocking := value.(*core.ClientBlocking)
-		if load, ok := core.WorkServerGroupMap.Load(key); load != nil && ok {
-			workBlocking := load.(*core.WorkBlocking)
-			for sign, mapping := range blocking.Mapping {
+	ret := make([]any, 0)
+	core.ClientManage.Range(func(key, cm any) bool {
+		client := cm.(*core.ClientBlocking)
+		if cn, ifCN := core.ConnectManage.Load(key); cn != nil && ifCN {
+			blocking := cn.(*core.ConnectBlocking)
+			client.PortListener.Range(func(sign, pm any) bool {
+				mapping := pm.(*core.PortMapping)
 				item := make(map[string]interface{}, 0)
-				item["work"] = len(workBlocking.Signs[sign])
-				item["port"] = mapping.Port
+				if signs, ifSign := blocking.PortSignMap.Load(sign); signs != nil && ifSign {
+					item["cn"] = len(signs.([]string))
+				} else {
+					item["cn"] = 0
+				}
+				item["port"] = mapping.PortNum
 				item["protocol"] = mapping.Protocol
 				ret = append(ret, item)
-			}
+				return true
+			})
 		}
 		return true
 	})

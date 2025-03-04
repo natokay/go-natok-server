@@ -1,0 +1,18 @@
+services:
+  natok-server:
+    container_name: natok-server
+    network_mode: host
+    restart: always
+    image: debian:12
+    command: /dist/natok-server
+    volumes:
+      - /data/docker/natok-server/dist:/dist
+
+# 常用命令汇总
+# docker-compose up -d    # 启动所有服务并后台运行
+# docker-compose stop     # 停止运行中的容器
+# docker-compose down     # 停止容器并移除资源
+# docker-compose restart  # 重启所有容器
+# docker-compose logs -f  # 实时查看日志
+# docker-compose ps       # 列出所有服务的状态
+# docker-compose build    # 重新构建所有服务的镜像

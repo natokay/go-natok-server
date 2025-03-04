@@ -3,16 +3,17 @@ package support
 import (
 	"github.com/gorilla/securecookie"
 	"github.com/iris-contrib/middleware/cors"
-	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/sessions"
+	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
 
 var (
-	CookieName      = "PLAYXY-NATOK"
-	SessionKey      = "PLAYXY-NATOK-AUTHENTICATION"
+	CookieName      = "NATOK"
+	SessionKey      = "NATOK-AUTHENTICATION"
+	SessionUserId   = "NATOK-USER_ID"
 	SessionsManager *sessions.Sessions
 )
 
@@ -22,7 +23,7 @@ type TimeCounter struct {
 	counter int64
 }
 
-func init() {
+func InitAuth() {
 	//附加session管理器
 	// AES仅支持16,24或32字节的密钥大小。
 	// 您需要准确提供该字节数，或者从您键入的内容中获取密钥。
@@ -57,7 +58,7 @@ func AuthorHandler() func(iris.Context) {
 			return
 		}
 		ctx.Next()
-		golog.Warn("Warn intercept: ", path)
+		logrus.Warnf("Intercept: %s", path)
 		//ctx.Redirect(loginWeb, iris.StatusFound)
 	}
 }

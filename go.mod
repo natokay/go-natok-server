@@ -1,6 +1,6 @@
 module natok-server
 
-go 1.19
+go 1.22
 
 require (
 	github.com/go-sql-driver/mysql v1.5.0
@@ -10,10 +10,10 @@ require (
 	github.com/iris-contrib/middleware/cors v0.0.0-20191219204441-78279b78a367
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kardianos/service v1.2.2
-	github.com/kataras/golog v0.0.10
 	github.com/kataras/iris/v12 v12.1.8
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mojocn/base64Captcha v1.3.5
-	github.com/satori/go.uuid v1.2.0
+	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v2 v2.3.0
 	xorm.io/core v0.7.2-0.20190928055935-90aeac8d08eb
 )
@@ -43,6 +43,7 @@ require (
 	github.com/iris-contrib/pongo2 v0.0.1 // indirect
 	github.com/iris-contrib/schema v0.0.1 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/kataras/golog v0.0.10 // indirect
 	github.com/kataras/neffos v0.0.14 // indirect
 	github.com/kataras/pio v0.0.2 // indirect
 	github.com/kataras/sitemap v0.0.5 // indirect

@@ -1,15 +1,19 @@
 natok:
   web.port: 1000
+  log.debug: false
   server:
     host: 0.0.0.0
     port: 1001
+    log-file-path: web/out.log
     cert-pem-path: web/s-cert.pem
     cert-key-path: web/s-cert.key
-    log-file-path: web/out.log
+
   datasource:
-    host: 127.0.0.1
+    # 数据库类型：sqlite、mysql
+    type: sqlite
+    host: playxy.cn
     port: 3306
     username: root
-    password: 123456
-    db-prefix:
-    table-prefix:
+    password: "@ai-mysql"
+    db-suffix: beta_test
+    table-suffix: ""

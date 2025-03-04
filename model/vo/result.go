@@ -1,8 +1,8 @@
 package vo
 
 import (
-	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12/mvc"
+	"github.com/sirupsen/logrus"
 )
 
 // Result struct 封装请求返回值
@@ -40,7 +40,7 @@ func GenFailedMsg(errMsg string) *Result {
 // TipMsg 若错误，将返回消息提示
 func TipMsg(err error) mvc.Result {
 	if err != nil {
-		golog.Error(err)
+		logrus.Errorf("%v", err.Error())
 		return mvc.Response{Object: GenFailedMsg(err.Error())}
 	}
 	return mvc.Response{Object: GenSuccessMsg(msgOk)}

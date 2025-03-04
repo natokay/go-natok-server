@@ -2,11 +2,11 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/mvc"
 	"github.com/kataras/iris/v12/sessions"
 	"github.com/mojocn/base64Captcha"
+	"github.com/sirupsen/logrus"
 	"natok-server/dsmapper"
 	"natok-server/model"
 	"natok-server/model/vo"
@@ -25,6 +25,7 @@ func (c *AuthController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("POST", "/user/login", "Login")
 	b.Handle("POST", "/user/logout", "Logout")
 	b.Handle("GET", "/user/info", "UserInfo")
+	b.Handle("POST", "/user/chgPwd", "ChangePassword")
 }
 
 // VerifyCodeHandler 生成图形验证码
@@ -42,7 +43,7 @@ func (c *AuthController) VerifyCodeHandler() {
 func (c *AuthController) Login() mvc.Result {
 	// 登录信息认证
 	user := new(model.NatokUser)
-	c.Ctx.ReadJSON(user)
+	_ = c.Ctx.ReadJSON(user)
 
 	// TODO 验证码非正常情况
 	if code := c.Session.Get(support.CaptchaId); code == nil || code == "" {
@@ -57,27 +58,48 @@ func (c *AuthController) Login() mvc.Result {
 		return vo.TipErrorMsg("账号或密码错误！")
 	}
 
+	session := support.SessionsManager.Start(c.Ctx)
+	session.Set(support.SessionKey, "OK")
+	session.Set(support.SessionUserId, user.Id)
+
 	marshal, _ := json.Marshal(user)
-	golog.Println(string(marshal))
-	//{"code":20000,"data":{"token":"admin-token"}}
-	return vo.TipResult(map[string]string{"token": "admin-token"})
+	logrus.Println(string(marshal))
+	return vo.TipResult(map[string]string{"token": "natok-token"})
 }
 
 // Logout 登出：删除用户session
 func (c *AuthController) Logout() mvc.Result {
 	session := support.SessionsManager.Start(c.Ctx)
-	session.Delete(support.SessionKey)
+	session.Clear()
 	return vo.TipResult("success")
-	//c.Ctx.Redirect("/login.html", iris.StatusFound)
 }
 
 // UserInfo 用户信息
 func (c *AuthController) UserInfo() mvc.Result {
 	ret := map[string]interface{}{
-		"introduction": "I am a super administrator",
-		"avatar":       "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
-		"name":         "Super Admin",
+		"introduction": "Natok Manager",
+		"avatar":       "/static/img/avatar.png",
+		"name":         "Natok",
 		"roles":        []string{"admin"},
 	}
 	return vo.TipResult(ret)
+}
+
+// ChangePassword 修改密码
+func (c *AuthController) ChangePassword() mvc.Result {
+	session := support.SessionsManager.Start(c.Ctx)
+	if userId, err := session.GetInt64(support.SessionUserId); err == nil {
+		oldPassword := c.Ctx.URLParam("oldPassword")
+		newPassword := c.Ctx.URLParam("newPassword")
+		if oldPassword == "" || newPassword == "" {
+			return vo.TipErrorMsg("请输入原密码和新密码！")
+		}
+		if dsmapper.ChangePassword(userId, oldPassword, newPassword) {
+			return vo.TipResult("success")
+		} else {
+			return vo.TipErrorMsg("原密码错误！")
+		}
+	} else {
+		return vo.TipErrorMsg("请先登录！")
+	}
 }

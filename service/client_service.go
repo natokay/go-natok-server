@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"github.com/satori/go.uuid"
 	"natok-server/core"
 	"natok-server/dsmapper"
 	"natok-server/model"
@@ -16,13 +15,13 @@ type ClientService struct {
 	Mapper dsmapper.DsMapper
 }
 
-// ClientQuery 查询并封装C端分页数据
-func (s *ClientService) QueryClient(wd, sort string, page, limit int) map[string]interface{} {
-	items, total := s.Mapper.ClientQuery(wd, sort, page, limit)
-	var ret = make(map[string]interface{}, 2)
+// ClientQuery 列表分页
+func (s *ClientService) ClientQuery(wd string, page, limit int) map[string]interface{} {
+	items, total := s.Mapper.ClientQuery(wd, page, limit)
+	ret := make(map[string]interface{}, 2)
 	for i, item := range items {
-		if load, ok := core.ClientGroupManage.Load(item.AccessKey); load != nil && ok {
-			item.UsePortNum = len(load.(*core.ClientBlocking).Mapping)
+		if cm, ifCM := core.ClientManage.Load(item.AccessKey); cm != nil && ifCM {
+			item.UsePortNum = core.GetLen(&cm.(*core.ClientBlocking).PortListener)
 			items[i] = item
 		}
 	}
@@ -31,128 +30,114 @@ func (s *ClientService) QueryClient(wd, sort string, page, limit int) map[string
 	return ret
 }
 
-// GetClient 获取C端信息
-func (s *ClientService) GetClient(clientId int64) map[string]interface{} {
-	var ret = make(map[string]interface{}, 2)
+// ClientGet 详情
+func (s *ClientService) ClientGet(clientId int64) map[string]interface{} {
+	ret := make(map[string]interface{}, 2)
 	ret["item"] = s.Mapper.ClientGetById(clientId)
 	return ret
 }
 
-// SaveClient 保存C端
-func (s *ClientService) SaveClient(id int64, name, accessKey string) error {
-	//TODO 事务保证一致性
-	err := s.Mapper.Transaction()
-	if nil != err {
-		return err
-	}
+// ClientSave 保存
+func (s *ClientService) ClientSave(id int64, name, accessKey string) (err error) {
 	if strings.Trim(accessKey, "") == "" {
-		accessKey = util.Md5(time.Now().String() + uuid.NewV4().String())
+		accessKey = util.Md5(util.PreTs(util.UUID()))
 	}
-	if id <= 0 {
-		//直接插入
-		client := model.NatokClient{AccessKey: accessKey, ClientName: name, JoinTime: time.Now(), Enabled: 1}
-		err = s.Mapper.ClientSaveUp(&client)
-	} else {
-		//进行更新
-		if client := s.Mapper.ClientGetById(id); client != nil {
-			oldAccessKey := client.AccessKey
-			client.ClientName = name
-			client.Apply = 0
-			client.AccessKey = accessKey
-
-			err := s.Mapper.ClientSaveUp(client)
+	// 事务保证一致性
+	return s.Mapper.Transaction(func() error {
+		if id <= 0 {
+			//直接插入
+			client := model.NatokClient{AccessKey: accessKey, ClientName: name}
+			client.JoinTime = time.Now()
+			client.Enabled = 1
+			err = s.Mapper.ClientSaveUp(&client)
 			if nil == err {
-				err = dsmapper.PortUpdateAccessKey(oldAccessKey, accessKey)
+				// 启用客户端
+				err = s.doClientSwitch(accessKey, 1)
+			}
+		} else {
+			//进行更新
+			client := s.Mapper.ClientGetById(id)
+			if nil == client {
+				return errors.New("not found")
+			}
+			if client.Enabled == 1 {
+				return errors.New("cannot be modified")
+			}
+			if nil == err && client.AccessKey != accessKey {
+				err = s.Mapper.PortUpdateAccessKey(client.AccessKey, accessKey)
 			}
 			if nil == err {
-				if accessKey != oldAccessKey {
-					err = SwitchClientBlocking(oldAccessKey, 3)
-				} else {
-					err = SwitchClientBlocking(oldAccessKey, 2)
-				}
+				client.ClientName = name
+				client.AccessKey = accessKey
+				err = s.Mapper.ClientSaveUp(client)
 			}
 		}
-	}
-	if nil == err {
-		err = SwitchClientBlocking(accessKey, 1)
-	}
-	if nil == err {
-		s.Mapper.Commit()
-	} else {
-		s.Mapper.Rollback()
-	}
-	return err
+		return err
+	})
 }
 
-// ClientKeys 获取所有C端秘钥
+// ClientKeys 获取所有客户端秘钥
 func (s *ClientService) ClientKeys() map[string]interface{} {
-	var ret = make(map[string]interface{}, 2)
+	ret := make(map[string]interface{}, 2)
 	ret["items"] = s.Mapper.ClientQueryKeys()
 	return ret
 }
 
-// SwitchClient 启用或停用C端
-func (s *ClientService) SwitchClient(clientId int64, accessKey string, enabled int8) error {
+// ClientSwitch 启用或停用
+func (s *ClientService) ClientSwitch(clientId int64, accessKey string, enabled int8) (err error) {
 	client := s.Mapper.ClientGetById(clientId)
 	if nil != client && client.AccessKey == accessKey {
-		client.Apply = 1
 		client.Enabled = enabled
 		client.Modified = time.Now()
-
-		//TODO 事务保证一致性
-		err := s.Mapper.Transaction()
-		if nil == err {
-			err = s.Mapper.PortUpdateStateByAccessKey(accessKey, enabled)
-		}
-		if nil == err {
-			err = s.Mapper.ClientSaveUp(client)
-		}
-		if nil == err {
-			err = SwitchClientBlocking(accessKey, 2-int(enabled))
-		}
-		if nil == err {
-			s.Mapper.Commit()
-		} else {
-			s.Mapper.Rollback()
-		}
-		return err
+		// 事务保证一致性
+		return s.Mapper.Transaction(func() error {
+			if err = s.Mapper.PortUpdateStateByAccessKey(accessKey, enabled); err != nil {
+				return err
+			}
+			if err = s.Mapper.ClientSaveUp(client); err != nil {
+				return err
+			}
+			if err = s.doClientSwitch(accessKey, 2-int(enabled)); err != nil {
+				return err
+			}
+			return nil
+		})
 	}
 	return errors.New("not found")
 }
 
-// DeleteClient 标记删除C端
-func (s *ClientService) DeleteClient(clientId int64, accessKey string) error {
+// ClientDelete 删除
+func (s *ClientService) ClientDelete(clientId int64, accessKey string) error {
 	client := s.Mapper.ClientGetById(clientId)
 	if nil != client && client.AccessKey == accessKey {
+		// 只能删除已停用的
+		if client.Enabled == 1 {
+			return errors.New("cannot be deleted")
+		}
 		client.Deleted = 1
-		client.Apply = 1
 		client.Enabled = 0
 		client.Modified = time.Now()
-
-		//TODO 事务保证一致性
-		err := s.Mapper.Transaction()
-		if nil == err {
-			err = s.Mapper.ClientSaveUp(client)
-		}
-		if nil == err {
-			err = s.Mapper.PortUpdateStateByAccessKey(accessKey, 0)
-		}
-		if nil == err {
-			err = SwitchClientBlocking(accessKey, 3)
-		}
-		if nil == err {
-			s.Mapper.Commit()
-		} else {
-			s.Mapper.Rollback()
-		}
-		return err
+		// 事务保证一致性
+		return s.Mapper.Transaction(func() error {
+			// 标记删除客户端映射
+			if err := s.Mapper.ClientSaveUp(client); err != nil {
+				return err
+			}
+			// 标记删除端口映射
+			if err := s.Mapper.PortDeleteByAccessKey(accessKey); err != nil {
+				return err
+			}
+			// 删除客户端连接
+			core.ClientManage.Delete(accessKey)
+			return nil
+		})
 	}
 	return errors.New("not found")
 }
 
-// ValidateClient C端，存在验证
-func (s *ClientService) ValidateClient(id int64, name string, level int32) map[string]interface{} {
-	var ret = make(map[string]interface{}, 2)
+// ClientValidate 客户端，存在验证
+func (s *ClientService) ClientValidate(id int64, name string, level int32) map[string]interface{} {
+	ret := make(map[string]interface{}, 2)
 	if id >= 0 && name != "" && level >= 1 && level <= 2 {
 		ret["state"] = dsmapper.ClientExist(id, name)
 	} else {
@@ -161,53 +146,47 @@ func (s *ClientService) ValidateClient(id int64, name string, level int32) map[s
 	return ret
 }
 
-// SwitchClientBlocking 启停C端
-// opt=1 启用 opt=2 停用 opt=3 停用&&删除
-func SwitchClientBlocking(accessKey string, opt int) (err error) {
+// ClientSwitch 启停客户端
+// opt=1 启用 opt=2 停用
+func (s *ClientService) doClientSwitch(accessKey string, opt int) (err error) {
 	switch opt {
 	case 1: //启用
-		clientBlocking, ok := core.ClientGroupManage.Load(accessKey)
-		if nil == clientBlocking || !ok {
-			core.ClientGroupManage.Store(accessKey, &core.ClientBlocking{
-				Enabled: true, AccessKey: accessKey, Mapping: make(map[string]*core.PortMapping, 0),
+		cm, ifCM := core.ClientManage.Load(accessKey)
+		if nil == cm || !ifCM {
+			core.ClientManage.Store(accessKey, &core.ClientBlocking{
+				Enabled: true, AccessKey: accessKey,
 			})
 		} else {
-			clientBlocking.(*core.ClientBlocking).Enabled = true
+			cm.(*core.ClientBlocking).Enabled = true
 		}
-		if ports := dsmapper.PortGet(accessKey); ports != nil {
+		if ports := s.Mapper.PortGet(accessKey); ports != nil {
 			for _, port := range ports {
-				if nil == err {
-					err = SwitchPortMapping(core.PortMapping{
-						AccessKey: port.AccessKey, Sign: port.Sign,
-						Port: port.PortNum, Intranet: port.Intranet,
-						Domain: port.Domain, Protocol: port.Protocol,
-					}, 1)
-				} else {
+				port.WhitelistNilEmpty()
+				mapping := &core.PortMapping{
+					AccessKey: port.AccessKey, PortSign: port.PortSign,
+					PortNum: port.PortNum, Intranet: port.Intranet,
+					Protocol:  port.Protocol,
+					Whitelist: port.Whitelist,
+				}
+				if err = SwitchPortMapping(mapping, 1); nil != err {
 					break
 				}
 			}
 		}
 	case 2: // 停用
-		if load, ok := core.ClientGroupManage.Load(accessKey); load != nil && ok {
-			clientBlocking := load.(*core.ClientBlocking)
-			clientBlocking.Enabled = false
-			if nil != clientBlocking.Listener {
-				err = clientBlocking.Listener.Close()
-			}
-			portMappingMap := clientBlocking.Mapping
-			if nil != portMappingMap {
-				for _, mapping := range portMappingMap {
-					if nil == err {
-						err = SwitchPortMapping(*mapping, 2)
-					} else {
-						break
-					}
+		if cm, ifCM := core.ClientManage.Load(accessKey); cm != nil && ifCM {
+			client := cm.(*core.ClientBlocking)
+			client.Enabled = false
+			client.PortListener.Range(func(_, pm any) bool {
+				mapping := pm.(*core.PortMapping)
+				if err = SwitchPortMapping(mapping, 2); nil != err {
+					return false
 				}
+				return true
+			})
+			if client.NatokHandler != nil {
+				client.NatokHandler.Write(core.Message{Type: core.TypeDisabledAccessKey, Uri: accessKey})
 			}
-		}
-	case 3: // 停用 && 删除
-		if err = SwitchClientBlocking(accessKey, 2); err == nil {
-			core.ClientGroupManage.Delete(accessKey)
 		}
 	}
 	return err
