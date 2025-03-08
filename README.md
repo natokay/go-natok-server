@@ -111,28 +111,33 @@ go build
 
 ## 版本描述
 **natok:1.0.0**
+
 natok-cli与natok-server网络代理通信基本功能实现。
 
 **natok:1.1.0**
+
 natok-cli与natok-server支持windows平台注册为服务运行，可支持开机自启，保证服务畅通。
 
 **natok:1.2.0**
+
 natok-cli可与多个natok-server保持连接，支持从多个不同的natok-server来访问natok-cli，以实现更快及更优的网络通信。
 
 **natok:1.3.0**
+
 natok-cli与natok-server可支持udp网络代理。
 
+
 **natok:1.4.0**
-natok-server端口访问支持白名单限制，重要端口(如：linux-22,windows-3389)可限制访问的ip地址。
+1. natok-server端口访问支持白名单限制，重要端口(如：linux-22,windows-3389)可限制访问的ip地址。
+2. natok-server端口访问监听，可选择监听范围：global=全局,local=本地。
 
 **natok:1.5.0**
+
 natok-server数据库类型支持sqlite、mysql，推荐使用sqlite，部署更便捷。
 
 **natok:1.6.0**
-natok-server与natok-client内部通讯采用连接池，即从公网访问natok-server后，会将连接放入连接池中，以便后续的请求时能更快的响应。
 
-**natok:1.6.1**
-natok-server的访问端口监听，可选择监听范围：global=全局,local=本地。
+natok-server与natok-client内部通讯采用连接池，即从公网访问natok-server后，会将连接放入连接池中，以便后续的请求时能更快的响应。
 
 
 ## NATOK平台界面预览
